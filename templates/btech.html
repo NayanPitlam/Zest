@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>B.Tech - Zest</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item"><a href="/undergrad">Undergrad</a></li>
+                <li class="breadcrumb-item active" aria-current="page">B.Tech</li>
+            </ol>
+        </nav>
+        <h1 class="mt-5">B.Tech Semesters</h1>
+        <div class="list-group mt-3">
+            {% for sem in semesters %}
+            <a href="/undergrad/{{ course }}/{{ sem }}" class="list-group-item list-group-item-action">Semester {{ sem }}</a>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

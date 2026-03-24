@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Undergrad - Zest</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Undergrad</li>
+            </ol>
+        </nav>
+        <h1 class="mt-5">Undergrad</h1>
+        <div class="list-group">
+            {% for course in courses %}
+            <a href="/undergrad/{{ course }}" class="list-group-item list-group-item-action">{{ course }}</a>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
