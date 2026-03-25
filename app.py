@@ -1,11 +1,11 @@
 import os
 import sqlite3
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, session, g
+from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_key' # Make sure to change this in a production environment
-ADMIN_PASSWORD = 'root123'
 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'csv', 'json', 'ppt', 'pptx','doc', 'docx', 'xls', 'xlsx', 'txt', 'png', 'jpg', 'jpeg', 'gif'}
@@ -22,6 +22,75 @@ def get_db_connection():
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.before_request
+def load_logged_in_user():
+    user_id = session.get('user_id')
+    if user_id is None:
+        g.user = None
+    else:
+        conn = get_db_connection()
+        g.user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+        conn.close()
+
+@app.route('/register', methods=('GET', 'POST'))
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        db = get_db_connection()
+        error = None
+
+        if not username:
+            error = 'Username is required.'
+        elif not password:
+            error = 'Password is required.'
+        
+        if error is None:
+            try:
+                db.execute(
+                    "INSERT INTO users (username, password, is_admin) VALUES (?, ?, ?)",
+                    (username, generate_password_hash(password), 0),
+                )
+                db.commit()
+            except db.IntegrityError:
+                error = f"User {username} is already registered."
+            else:
+                return redirect(url_for("login"))
+        
+        flash(error)
+
+    return render_template('register.html')
+
+@app.route('/login', methods=('GET', 'POST'))
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        db = get_db_connection()
+        error = None
+        user = db.execute(
+            'SELECT * FROM users WHERE username = ?', (username,)
+        ).fetchone()
+
+        if user is None:
+            error = 'Incorrect username.'
+        elif not check_password_hash(user['password'], password):
+            error = 'Incorrect password.'
+
+        if error is None:
+            session.clear()
+            session['user_id'] = user['id']
+            return redirect(url_for('index'))
+
+        flash(error)
+
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('index'))
 
 @app.route('/')
 def index():
@@ -86,6 +155,10 @@ def undergrad_sem(course, sem):
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
+    if g.user is None or not g.user['is_admin']:
+        flash('You are not authorized to access this page.', 'danger')
+        return redirect(url_for('login'))
+
     if request.method == 'POST':
         title = request.form['title']
         level1 = request.form['level1']
@@ -118,30 +191,83 @@ def download_file(filename):
 
 @app.route('/remove/<filename>', methods=['GET', 'POST'])
 def remove_file(filename):
-    if request.method == 'POST':
-        password = request.form['password']
-        if password == ADMIN_PASSWORD:
-            # Delete from DB
-            conn = get_db_connection()
-            conn.execute('DELETE FROM resources WHERE filename = ?', (filename,))
-            conn.commit()
-            conn.close()
+    if g.user is None or not g.user['is_admin']:
+        flash('You are not authorized to access this page.', 'danger')
+        return redirect(url_for('login'))
 
-            # Delete from filesystem
-            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            
-            flash(f'{filename} has been removed.', 'success')
-            return redirect(url_for('index'))
-        else:
-            flash('Incorrect password.', 'danger')
-            return render_template('remove.html', filename=filename)
+    if request.method == 'POST':
+        # Delete from DB
+        conn = get_db_connection()
+        conn.execute('DELETE FROM resources WHERE filename = ?', (filename,))
+        conn.commit()
+        conn.close()
+
+        # Delete from filesystem
+        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        
+        flash(f'{filename} has been removed.', 'success')
+        return redirect(url_for('index'))
 
     return render_template('remove.html', filename=filename)
 
+
+
+
+
+
+
 if __name__ == '__main__':
+
+
+
+
+
+
+
     # Initialize DB schema on startup
+
+
+
+
+
+
+
     conn = get_db_connection()
+
+
+
+
+
+
+
     with open('schema.sql') as f:
+
+
+
+
+
+
+
         conn.executescript(f.read())
+
+
+
+
+
+
+
+    admin_user = conn.execute('SELECT * FROM users WHERE username = ?', ('admin',)).fetchone()
+    if not admin_user:
+        conn.execute('INSERT INTO users (username, password, is_admin) VALUES (?, ?, ?)',
+                     ('admin', generate_password_hash('admin'), 1))
+        conn.commit()
+
     conn.close()
+
+
+
+
+
+
+
     app.run(debug=True)

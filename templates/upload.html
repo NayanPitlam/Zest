@@ -1,114 +1,98 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Upload File - Zest</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-</head>
-<body>
-    <div class="container">
-        <h1 class="mt-5">Upload a New File</h1>
-        {% with messages = get_flashed_messages() %}
-          {% if messages %}
-            <div class="alert alert-warning" role="alert">
-              {% for message in messages %}
-                {{ message }}
-              {% endfor %}
-            </div>
-          {% endif %}
-        {% endwith %}
-        <form method="post" enctype="multipart/form-data" action="/upload">
-            <div class="form-group">
-                <label for="title">Title</label>
-                <input type="text" class="form-control" id="title" name="title" required>
-            </div>
-            <div class="form-group">
-                <label for="level1">Category</label>
-                <select class="form-control" id="level1" name="level1" required>
-                    <option value="">-- Select Category --</option>
-                    <option value="School">School</option>
-                    <option value="Intermediate">Intermediate</option>
-                    <option value="Undergrad">Undergrad</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="level2">Sub-Category</label>
-                <select class="form-control" id="level2" name="level2" required>
-                    <option value="">-- Select Sub-Category --</option>
-                </select>
-            </div>
-            <div class="form-group" id="level3-group" style="display: none;">
-                <label for="level3">Semester</label>
-                <select class="form-control" id="level3" name="level3">
-                    <option value="">-- Select Semester --</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="file">File</label>
-                <input type="file" class="form-group-file" id="file" name="file" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Upload</button>
-        </form>
-    </div>
-    <script>
-        const level1 = document.getElementById('level1');
-        const level2 = document.getElementById('level2');
-        const level3 = document.getElementById('level3');
-        const level3Group = document.getElementById('level3-group');
+{% extends "base.html" %}
 
-        const levels = {
-            "School": [...Array(10).keys()].map(i => `${i+1}th class`),
-            "Intermediate": ["11th class", "12th class"],
-            "Undergrad": {
-                "B.Tech": ["1-1", "1-2", "2-1", "2-2", "3-1", "3-2", "4-1", "4-2"],
-                // Add other courses here
-            }
-        };
+{% block content %}
+<div class="container">
+    <h1 class="mt-5">Upload a New File</h1>
+    <form method="post" enctype="multipart/form-data" action="/upload">
+        <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text" class="form-control" id="title" name="title" required>
+        </div>
+        <div class="form-group">
+            <label for="level1">Category</label>
+            <select class="form-control" id="level1" name="level1" required>
+                <option value="">-- Select Category --</option>
+                <option value="School">School</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Undergrad">Undergrad</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="level2">Sub-Category</label>
+            <select class="form-control" id="level2" name="level2" required>
+                <option value="">-- Select Sub-Category --</option>
+            </select>
+        </div>
+        <div class="form-group" id="level3-group" style="display: none;">
+            <label for="level3">Semester</label>
+            <select class="form-control" id="level3" name="level3">
+                <option value="">-- Select Semester --</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="file">File</label>
+            <input type="file" class="form-group-file" id="file" name="file" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Upload</button>
+    </form>
+</div>
+<script>
+    const level1 = document.getElementById('level1');
+    const level2 = document.getElementById('level2');
+    const level3 = document.getElementById('level3');
+    const level3Group = document.getElementById('level3-group');
 
-        level1.addEventListener('change', (e) => {
-            const selected_level1 = e.target.value;
-            level2.innerHTML = '<option value="">-- Select Sub-Category --</option>';
-            level3.innerHTML = '<option value="">-- Select Semester --</option>';
-            level3Group.style.display = 'none';
+    const levels = {
+        "School": [...Array(10).keys()].map(i => `${i+1}th class`),
+        "Intermediate": ["11th class", "12th class"],
+        "Undergrad": {
+            "B.Tech": ["1-1", "1-2", "2-1", "2-2", "3-1", "3-2", "4-1", "4-2"],
+            // Add other courses here
+        }
+    };
 
-            if (selected_level1 in levels) {
-                const level2_options = levels[selected_level1];
-                if (Array.isArray(level2_options)) {
-                    level2_options.forEach(l2 => {
-                        const option = document.createElement('option');
-                        option.value = l2;
-                        option.textContent = l2;
-                        level2.appendChild(option);
-                    });
-                } else { // It's an object for Undergrad
-                    Object.keys(level2_options).forEach(l2 => {
-                        const option = document.createElement('option');
-                        option.value = l2;
-                        option.textContent = l2;
-                        level2.appendChild(option);
-                    });
-                }
-            }
-        });
+    level1.addEventListener('change', (e) => {
+        const selected_level1 = e.target.value;
+        level2.innerHTML = '<option value="">-- Select Sub-Category --</option>';
+        level3.innerHTML = '<option value="">-- Select Semester --</option>';
+        level3Group.style.display = 'none';
 
-        level2.addEventListener('change', (e) => {
-            const selected_level1 = level1.value;
-            const selected_level2 = e.target.value;
-            level3.innerHTML = '<option value="">-- Select Semester --</option>';
-            level3Group.style.display = 'none';
-            
-            if (selected_level1 === "Undergrad" && selected_level2 in levels[selected_level1]) {
-                level3Group.style.display = 'block';
-                const level3_options = levels[selected_level1][selected_level2];
-                level3_options.forEach(l3 => {
+        if (selected_level1 in levels) {
+            const level2_options = levels[selected_level1];
+            if (Array.isArray(level2_options)) {
+                level2_options.forEach(l2 => {
                     const option = document.createElement('option');
-                    option.value = l3;
-                    option.textContent = l3;
-                    level3.appendChild(option);
+                    option.value = l2;
+                    option.textContent = l2;
+                    level2.appendChild(option);
+                });
+            } else { // It's an object for Undergrad
+                Object.keys(level2_options).forEach(l2 => {
+                    const option = document.createElement('option');
+                    option.value = l2;
+                    option.textContent = l2;
+                    level2.appendChild(option);
                 });
             }
-        });
-    </script>
-</body>
-</html>
+        }
+    });
+
+    level2.addEventListener('change', (e) => {
+        const selected_level1 = level1.value;
+        const selected_level2 = e.target.value;
+        level3.innerHTML = '<option value="">-- Select Semester --</option>';
+        level3Group.style.display = 'none';
+        
+        if (selected_level1 === "Undergrad" && selected_level2 in levels[selected_level1]) {
+            level3Group.style.display = 'block';
+            const level3_options = levels[selected_level1][selected_level2];
+            level3_options.forEach(l3 => {
+                const option = document.createElement('option');
+                option.value = l3;
+                option.textContent = l3;
+                level3.appendChild(option);
+            });
+        }
+    });
+</script>
+{% endblock %}

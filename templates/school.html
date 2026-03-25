@@ -1,25 +1,16 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>School - Zest</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-</head>
-<body>
-    <div class="container">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/">Home</a></li>
-                <li class="breadcrumb-item active" aria-current="page">School</li>
-            </ol>
-        </nav>
-        <h1 class="mt-5">School</h1>
-        <div class="list-group">
-            {% for class_num in classes %}
-            <a href="/school/{{ class_num }}" class="list-group-item list-group-item-action">{{ class_num }}th class</a>
-            {% endfor %}
-        </div>
-    </div>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}School - Zest{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">School</li>
+    </ol>
+</nav>
+<h1>School</h1>
+<div class="list-group">
+    {% for class_num in classes %}
+    <a href="/school/{{ class_num }}" class="list-group-item list-group-item-action">{{ class_num }}th class</a>
+    {% endfor %}
+</div>
+{% endblock %}

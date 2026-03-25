@@ -1,47 +1,41 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>{{ breadcrumbs[-1][0] }} - Zest</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-</head>
-<body>
-    <div class="container">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/">Home</a></li>
-                {% for label, url in breadcrumbs %}
-                    {% if url %}
-                        <li class="breadcrumb-item"><a href="{{ url }}">{{ label }}</a></li>
-                    {% else %}
-                        <li class="breadcrumb-item active" aria-current="page">{{ label }}</li>
-                    {% endif %}
-                {% endfor %}
-            </ol>
-        </nav>
-        <h1 class="mt-5">{{ breadcrumbs[-1][0] }}</h1>
-        <table class="table">
-            <thead class="thead-light">
-                <tr>
-                    <th>Title</th>
-                    <th>Filename</th>
-                    <th>Uploaded</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for resource in resources %}
-                <tr>
-                    <td>{{ resource.title }}</td>
-                    <td>{{ resource.filename }}</td>
-                    <td>{{ resource.upload_date }}</td>
-                    <td><a href="/download/{{ resource.filename }}" class="btn btn-sm btn-success">Download</a>
-                        <a href="/remove/{{ resource.filename }}" class="btn btn-sm btn-danger">Remove</a></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}{{ breadcrumbs[-1][0] }} - Zest{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        {% for label, url in breadcrumbs %}
+            {% if url %}
+                <li class="breadcrumb-item"><a href="{{ url }}">{{ label }}</a></li>
+            {% else %}
+                <li class="breadcrumb-item active" aria-current="page">{{ label }}</li>
+            {% endif %}
+        {% endfor %}
+    </ol>
+</nav>
+<h1>{{ breadcrumbs[-1][0] }}</h1>
+<table class="table">
+    <thead class="thead-light">
+        <tr>
+            <th>Title</th>
+            <th>Filename</th>
+            <th>Uploaded</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for resource in resources %}
+        <tr>
+            <td>{{ resource.title }}</td>
+            <td>{{ resource.filename }}</td>
+            <td>{{ resource.upload_date }}</td>
+            <td><a href="/download/{{ resource.filename }}" class="btn btn-sm btn-success">Download</a>
+                {% if g.user and g.user.is_admin %}
+                <a href="/remove/{{ resource.filename }}" class="btn btn-sm btn-danger">Remove</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
