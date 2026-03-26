@@ -187,6 +187,9 @@ def upload_file():
 
 @app.route('/download/<filename>')
 def download_file(filename):
+    if g.user is None:
+        flash('Please log in to download files.', 'info')
+        return redirect(url_for('login'))
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
 
 @app.route('/remove/<filename>', methods=['GET', 'POST'])
