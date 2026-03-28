@@ -235,6 +235,14 @@ def create_admin_command():
 
 app.cli.add_command(create_admin_command)
 
+@click.command('test-command')
+@with_appcontext
+def test_command():
+    """A simple test command."""
+    click.echo('Test command executed successfully!')
+
+app.cli.add_command(test_command)
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
