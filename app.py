@@ -1,9 +1,11 @@
 import os
+import click
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, session, g
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
+from flask.cli import with_appcontext
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_key' # Make sure to change this in a production environment
@@ -219,18 +221,21 @@ def remove_file(filename):
 
     return render_template('remove.html', filename=filename)
 
+@click.command('create-admin')
+@with_appcontext
+def create_admin_command():
+    """Create a new admin user."""
+    if not User.query.filter_by(username='admin').first():
+        admin = User(username='admin', password=generate_password_hash('admin'), is_admin=True)
+        db.session.add(admin)
+        db.session.commit()
+        click.echo('Admin user created.')
+    else:
+        click.echo('Admin user already exists.')
 
-
-
-
-
+app.cli.add_command(create_admin_command)
 
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        # Create admin user if not exists
-        if not User.query.filter_by(username='admin').first():
-            admin = User(username='admin', password=generate_password_hash('admin'), is_admin=True)
-            db.session.add(admin)
-            db.session.commit()
     app.run(debug=True)
