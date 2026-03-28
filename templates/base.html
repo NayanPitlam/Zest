@@ -31,7 +31,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
       <div class="container">
         <a class="navbar-brand" href="{{ url_for('index') }}">
-          <i class="fas fa-leaf"></i> Zest
+          <span style="font-size: 1.5em; margin-right: 0; position: relative; top: 0;">𝕫</span>est
         </a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
@@ -39,9 +39,6 @@
 
         <div class="collapse navbar-collapse" id="navbarColor01">
           <ul class="navbar-nav mr-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('index') }}">Home</a>
-            </li>
           </ul>
           <ul class="navbar-nav ml-auto">
             {% if g.user and g.user.is_admin %}
