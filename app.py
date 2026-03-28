@@ -1,8 +1,9 @@
 import os
-import sqlite3
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, session, g
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_key' # Make sure to change this in a production environment
@@ -10,14 +11,32 @@ app.secret_key = 'super_secret_key' # Make sure to change this in a production e
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'csv', 'json', 'ppt', 'pptx','doc', 'docx', 'xls', 'xlsx', 'txt', 'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 
 # Ensure upload folder exists
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-def get_db_connection():
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
-    return conn
+db = SQLAlchemy(app)
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
+    is_admin = db.Column(db.Boolean, nullable=False, default=False)
+
+class Resource(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    filename = db.Column(db.String(200), nullable=False)
+    filetype = db.Column(db.String(50), nullable=False)
+    level1 = db.Column(db.String(100))
+    level2 = db.Column(db.String(100))
+    level3 = db.Column(db.String(100))
+    subject = db.Column(db.String(100))
+    upload_date = db.Column(db.DateTime, server_default=func.now())
+
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -29,35 +48,28 @@ def load_logged_in_user():
     if user_id is None:
         g.user = None
     else:
-        conn = get_db_connection()
-        g.user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
-        conn.close()
+        g.user = User.query.get(user_id)
 
 @app.route('/register', methods=('GET', 'POST'))
 def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        db = get_db_connection()
         error = None
 
         if not username:
             error = 'Username is required.'
         elif not password:
             error = 'Password is required.'
-        
+        elif User.query.filter_by(username=username).first() is not None:
+             error = f"User {username} is already registered."
+
         if error is None:
-            try:
-                db.execute(
-                    "INSERT INTO users (username, password, is_admin) VALUES (?, ?, ?)",
-                    (username, generate_password_hash(password), 0),
-                )
-                db.commit()
-            except db.IntegrityError:
-                error = f"User {username} is already registered."
-            else:
-                return redirect(url_for("login"))
-        
+            new_user = User(username=username, password=generate_password_hash(password), is_admin=False)
+            db.session.add(new_user)
+            db.session.commit()
+            return redirect(url_for("login"))
+
         flash(error)
 
     return render_template('register.html')
@@ -67,20 +79,17 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        db = get_db_connection()
         error = None
-        user = db.execute(
-            'SELECT * FROM users WHERE username = ?', (username,)
-        ).fetchone()
+        user = User.query.filter_by(username=username).first()
 
         if user is None:
             error = 'Incorrect username.'
-        elif not check_password_hash(user['password'], password):
+        elif not check_password_hash(user.password, password):
             error = 'Incorrect password.'
 
         if error is None:
             session.clear()
-            session['user_id'] = user['id']
+            session['user_id'] = user.id
             return redirect(url_for('index'))
 
         flash(error)
@@ -116,49 +125,41 @@ def btech():
 
 @app.route('/school/<class_num>')
 def school_class(class_num):
-    conn = get_db_connection()
-    resources = conn.execute('SELECT * FROM resources WHERE level1 = ? AND level2 = ? ORDER BY subject, upload_date DESC', ('School', f'{class_num}th class')).fetchall()
-    conn.close()
+    resources = Resource.query.filter_by(level1='School', level2=f'{class_num}th class').order_by(Resource.subject, Resource.upload_date.desc()).all()
     return render_template('resource_list.html', resources=resources, breadcrumbs=[('School', '/school'), (f'{class_num}th class', '')])
 
 @app.route('/intermediate/<class_num>')
 def intermediate_class(class_num):
-    conn = get_db_connection()
-    resources = conn.execute('SELECT * FROM resources WHERE level1 = ? AND level2 = ? ORDER BY subject, upload_date DESC', ('Intermediate', f'{class_num}th class')).fetchall()
-    conn.close()
+    resources = Resource.query.filter_by(level1='Intermediate', level2=f'{class_num}th class').order_by(Resource.subject, Resource.upload_date.desc()).all()
     return render_template('resource_list.html', resources=resources, breadcrumbs=[('Intermediate', '/intermediate'), (f'{class_num}th class', '')])
 
 @app.route('/undergrad/<course>')
 def undergrad_course(course):
     if course == 'B.Tech':
         return redirect(url_for('btech'))
-    conn = get_db_connection()
-    resources = conn.execute('SELECT * FROM resources WHERE level1 = ? AND level2 = ? ORDER BY level3, subject, upload_date DESC', ('Undergrad', course)).fetchall()
-    conn.close()
+    resources = Resource.query.filter_by(level1='Undergrad', level2=course).order_by(Resource.level3, Resource.subject, Resource.upload_date.desc()).all()
     # Group resources by semester
     resources_by_sem = {}
     for r in resources:
-        sem = r['level3']
+        sem = r.level3
         if sem not in resources_by_sem:
             resources_by_sem[sem] = []
         resources_by_sem[sem].append(r)
     # Sort resources within each semester by subject
     for sem in resources_by_sem:
-        resources_by_sem[sem].sort(key=lambda x: x['subject'])
+        resources_by_sem[sem].sort(key=lambda x: x.subject)
     return render_template('course.html', resources_by_sem=resources_by_sem, breadcrumbs=[('Undergrad', '/undergrad'), (course, '')])
 
 @app.route('/undergrad/<course>/<sem>')
 def undergrad_sem(course, sem):
-    conn = get_db_connection()
-    resources = conn.execute('SELECT * FROM resources WHERE level1 = ? AND level2 = ? AND level3 = ? ORDER BY subject, upload_date DESC', ('Undergrad', course, sem)).fetchall()
-    conn.close()
+    resources = Resource.query.filter_by(level1='Undergrad', level2=course, level3=sem).order_by(Resource.subject, Resource.upload_date.desc()).all()
     return render_template('resource_list.html', resources=resources, breadcrumbs=[('Undergrad', '/undergrad'), (course, f'/undergrad/{course}'), (sem, '')])
 
 
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
-    if g.user is None or not g.user['is_admin']:
+    if g.user is None or not g.user.is_admin:
         flash('You are not authorized to access this page.', 'danger')
         return redirect(url_for('login'))
 
@@ -181,11 +182,10 @@ def upload_file():
             filetype = filename.rsplit('.', 1)[1].lower()
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             
-            conn = get_db_connection()
-            conn.execute('INSERT INTO resources (title, filename, filetype, level1, level2, level3, subject) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                         (title, filename, filetype, level1, level2, level3, subject))
-            conn.commit()
-            conn.close()
+            new_resource = Resource(title=title, filename=filename, filetype=filetype, level1=level1, level2=level2, level3=level3, subject=subject)
+            db.session.add(new_resource)
+            db.session.commit()
+            
             return redirect(url_for('index'))
     return render_template('upload.html')
 
@@ -198,21 +198,23 @@ def download_file(filename):
 
 @app.route('/remove/<filename>', methods=['GET', 'POST'])
 def remove_file(filename):
-    if g.user is None or not g.user['is_admin']:
+    if g.user is None or not g.user.is_admin:
         flash('You are not authorized to access this page.', 'danger')
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        # Delete from DB
-        conn = get_db_connection()
-        conn.execute('DELETE FROM resources WHERE filename = ?', (filename,))
-        conn.commit()
-        conn.close()
+        resource_to_delete = Resource.query.filter_by(filename=filename).first()
+        if resource_to_delete:
+            db.session.delete(resource_to_delete)
+            db.session.commit()
 
-        # Delete from filesystem
-        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            # Delete from filesystem
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            
+            flash(f'{filename} has been removed.', 'success')
+        else:
+            flash(f'{filename} not found in database.', 'warning')
         
-        flash(f'{filename} has been removed.', 'success')
         return redirect(url_for('index'))
 
     return render_template('remove.html', filename=filename)
@@ -224,57 +226,11 @@ def remove_file(filename):
 
 
 if __name__ == '__main__':
-
-
-
-
-
-
-
-    # Initialize DB schema on startup
-
-
-
-
-
-
-
-    conn = get_db_connection()
-
-
-
-
-
-
-
-    with open('schema.sql') as f:
-
-
-
-
-
-
-
-        conn.executescript(f.read())
-
-
-
-
-
-
-
-    admin_user = conn.execute('SELECT * FROM users WHERE username = ?', ('admin',)).fetchone()
-    if not admin_user:
-        conn.execute('INSERT INTO users (username, password, is_admin) VALUES (?, ?, ?)',
-                     ('admin', generate_password_hash('admin'), 1))
-        conn.commit()
-
-    conn.close()
-
-
-
-
-
-
-
+    with app.app_context():
+        db.create_all()
+        # Create admin user if not exists
+        if not User.query.filter_by(username='admin').first():
+            admin = User(username='admin', password=generate_password_hash('admin'), is_admin=True)
+            db.session.add(admin)
+            db.session.commit()
     app.run(debug=True)
