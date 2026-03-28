@@ -37,7 +37,14 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% set prev_subject = namespace(value=None) %}
                         {% for resource in resources %}
+                        {% if resource.subject != prev_subject.value %}
+                        <tr class="table-primary">
+                            <td colspan="4"><strong>{{ resource.subject }}</strong></td>
+                        </tr>
+                        {% set prev_subject.value = resource.subject %}
+                        {% endif %}
                         <tr>
                             <td>{{ resource.title }}</td>
                             <td>{{ resource.filename }}</td>

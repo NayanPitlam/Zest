@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS resources (
     level1 TEXT,
     level2 TEXT,
     level3 TEXT,
+    subject TEXT,
     upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

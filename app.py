@@ -117,14 +117,14 @@ def btech():
 @app.route('/school/<class_num>')
 def school_class(class_num):
     conn = get_db_connection()
-    resources = conn.execute('SELECT * FROM resources WHERE level1 = ? AND level2 = ? ORDER BY upload_date DESC', ('School', f'{class_num}th class')).fetchall()
+    resources = conn.execute('SELECT * FROM resources WHERE level1 = ? AND level2 = ? ORDER BY subject, upload_date DESC', ('School', f'{class_num}th class')).fetchall()
     conn.close()
     return render_template('resource_list.html', resources=resources, breadcrumbs=[('School', '/school'), (f'{class_num}th class', '')])
 
 @app.route('/intermediate/<class_num>')
 def intermediate_class(class_num):
     conn = get_db_connection()
-    resources = conn.execute('SELECT * FROM resources WHERE level1 = ? AND level2 = ? ORDER BY upload_date DESC', ('Intermediate', f'{class_num}th class')).fetchall()
+    resources = conn.execute('SELECT * FROM resources WHERE level1 = ? AND level2 = ? ORDER BY subject, upload_date DESC', ('Intermediate', f'{class_num}th class')).fetchall()
     conn.close()
     return render_template('resource_list.html', resources=resources, breadcrumbs=[('Intermediate', '/intermediate'), (f'{class_num}th class', '')])
 
@@ -133,7 +133,7 @@ def undergrad_course(course):
     if course == 'B.Tech':
         return redirect(url_for('btech'))
     conn = get_db_connection()
-    resources = conn.execute('SELECT * FROM resources WHERE level1 = ? AND level2 = ? ORDER BY level3, upload_date DESC', ('Undergrad', course)).fetchall()
+    resources = conn.execute('SELECT * FROM resources WHERE level1 = ? AND level2 = ? ORDER BY level3, subject, upload_date DESC', ('Undergrad', course)).fetchall()
     conn.close()
     # Group resources by semester
     resources_by_sem = {}
@@ -142,12 +142,15 @@ def undergrad_course(course):
         if sem not in resources_by_sem:
             resources_by_sem[sem] = []
         resources_by_sem[sem].append(r)
+    # Sort resources within each semester by subject
+    for sem in resources_by_sem:
+        resources_by_sem[sem].sort(key=lambda x: x['subject'])
     return render_template('course.html', resources_by_sem=resources_by_sem, breadcrumbs=[('Undergrad', '/undergrad'), (course, '')])
 
 @app.route('/undergrad/<course>/<sem>')
 def undergrad_sem(course, sem):
     conn = get_db_connection()
-    resources = conn.execute('SELECT * FROM resources WHERE level1 = ? AND level2 = ? AND level3 = ? ORDER BY upload_date DESC', ('Undergrad', course, sem)).fetchall()
+    resources = conn.execute('SELECT * FROM resources WHERE level1 = ? AND level2 = ? AND level3 = ? ORDER BY subject, upload_date DESC', ('Undergrad', course, sem)).fetchall()
     conn.close()
     return render_template('resource_list.html', resources=resources, breadcrumbs=[('Undergrad', '/undergrad'), (course, f'/undergrad/{course}'), (sem, '')])
 
@@ -164,6 +167,7 @@ def upload_file():
         level1 = request.form['level1']
         level2 = request.form['level2']
         level3 = request.form.get('level3') # level3 might not be present
+        subject = request.form.get('subject') # subject might not be present
 
         if 'file' not in request.files:
             flash('No file part')
@@ -178,8 +182,8 @@ def upload_file():
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             
             conn = get_db_connection()
-            conn.execute('INSERT INTO resources (title, filename, filetype, level1, level2, level3) VALUES (?, ?, ?, ?, ?, ?)',
-                         (title, filename, filetype, level1, level2, level3))
+            conn.execute('INSERT INTO resources (title, filename, filetype, level1, level2, level3, subject) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                         (title, filename, filetype, level1, level2, level3, subject))
             conn.commit()
             conn.close()
             return redirect(url_for('index'))
