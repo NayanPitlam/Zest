@@ -1,13 +1,20 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <h1 class="mt-5">Remove File</h1>
-    <p>Are you sure you want to remove <strong>{{ filename }}</strong>?</p>
-    
-    <form method="post" action="/remove/{{ filename }}">
-        <button type="submit" class="btn btn-danger">Confirm Removal</button>
-        <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
-    </form>
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-lg">
+            <div class="card-header text-center bg-danger text-white">
+                <h3><i class="fas fa-exclamation-triangle"></i> Confirm Removal</h3>
+            </div>
+            <div class="card-body text-center">
+                <p>Are you sure you want to remove <strong>{{ filename }}</strong>?</p>
+                <form method="post" action="/remove/{{ filename }}">
+                    <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Confirm Removal</button>
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary"><i class="fas fa-times"></i> Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

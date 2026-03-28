@@ -7,10 +7,22 @@
         <li class="breadcrumb-item active" aria-current="page">Intermediate</li>
     </ol>
 </nav>
-<h1>Intermediate</h1>
-<div class="list-group">
+<div class="text-center mb-4">
+    <h1><i class="fas fa-user-graduate"></i> Intermediate Level</h1>
+    <p class="lead">Select a class to view resources.</p>
+</div>
+<div class="row">
     {% for class_num in classes %}
-    <a href="/intermediate/{{ class_num }}" class="list-group-item list-group-item-action">{{ class_num }}th class</a>
+    <div class="col-md-6">
+        <div class="card text-center mb-4">
+            <div class="card-body">
+                <a href="/intermediate/{{ class_num }}" class="text-decoration-none text-dark">
+                    <i class="fas fa-book-open fa-3x mb-3 text-primary"></i>
+                    <h4 class="card-title">{{ class_num }}th Class</h4>
+                </a>
+            </div>
+        </div>
+    </div>
     {% endfor %}
 </div>
 {% endblock %}

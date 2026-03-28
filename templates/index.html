@@ -1,13 +1,45 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div class="container">
-        <h1 class="mt-5">Zest</h1>
-        <p class="lead">A simple file sharing utility.</p>
-        <div class="list-group">
-            <a href="/school" class="list-group-item list-group-item-action">School</a>
-            <a href="/intermediate" class="list-group-item list-group-item-action">Intermediate</a>
-            <a href="/undergrad" class="list-group-item list-group-item-action">Undergrad</a>
-        </div>
+<div class="jumbotron text-center">
+  <h1 class="display-3"><i class="fas fa-leaf"></i> Welcome to Zest</h1>
+  <p class="lead">Your one-stop destination for educational resources.</p>
+  <hr class="my-4">
+  <p>Explore resources for different educational levels.</p>
+  <div class="d-flex justify-content-center">
+    <a href="{{ url_for('school') }}" class="text-white mx-3"><i class="fas fa-school fa-2x"></i></a>
+    <a href="{{ url_for('intermediate') }}" class="text-white mx-3"><i class="fas fa-user-graduate fa-2x"></i></a>
+    <a href="{{ url_for('undergrad') }}" class="text-white mx-3"><i class="fas fa-university fa-2x"></i></a>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-4">
+    <div class="card mb-4">
+      <div class="card-body">
+        <h4 class="card-title">School Level</h4>
+        <p class="card-text">Find resources for classes 1st to 10th, including notes, tutorials, and practice problems to help you excel in your studies.</p>
+        <a href="{{ url_for('school') }}" class="btn btn-primary">Explore School</a>
+      </div>
     </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card mb-4">
+      <div class="card-body">
+        <h4 class="card-title">Intermediate Level</h4>
+        <p class="card-text">Explore a wide range of materials for classes 11th and 12th, covering various streams like Science, Commerce, and Arts.</p>
+        <a href="{{ url_for('intermediate') }}" class="btn btn-primary">Explore Intermediate</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card mb-4">
+      <div class="card-body">
+        <h4 class="card-title">Undergraduate Level</h4>
+        <p class="card-text">Access a comprehensive collection of resources for undergraduate courses, including lecture notes, and research papers.</p>
+        <a href="{{ url_for('undergrad') }}" class="btn btn-primary">Explore Undergrad</a>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

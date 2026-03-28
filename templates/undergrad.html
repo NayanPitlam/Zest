@@ -7,10 +7,22 @@
         <li class="breadcrumb-item active" aria-current="page">Undergrad</li>
     </ol>
 </nav>
-<h1>Undergrad</h1>
-<div class="list-group">
+<div class="text-center mb-4">
+    <h1><i class="fas fa-university"></i> Undergraduate Level</h1>
+    <p class="lead">Select a course to view resources.</p>
+</div>
+<div class="row">
     {% for course in courses %}
-    <a href="/undergrad/{{ course }}" class="list-group-item list-group-item-action">{{ course }}</a>
+    <div class="col-md-6">
+        <div class="card text-center mb-4">
+            <div class="card-body">
+                <a href="/undergrad/{{ course }}" class="text-decoration-none text-dark">
+                    <i class="fas fa-graduation-cap fa-3x mb-3 text-primary"></i>
+                    <h4 class="card-title">{{ course }}</h4>
+                </a>
+            </div>
+        </div>
+    </div>
     {% endfor %}
 </div>
 {% endblock %}

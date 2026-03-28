@@ -8,10 +8,22 @@
         <li class="breadcrumb-item active" aria-current="page">B.Tech</li>
     </ol>
 </nav>
-<h1>B.Tech Semesters</h1>
-<div class="list-group mt-3">
+<div class="text-center mb-4">
+    <h1><i class="fas fa-cogs"></i> B.Tech Semesters</h1>
+    <p class="lead">Select a semester to view resources.</p>
+</div>
+<div class="row">
     {% for sem in semesters %}
-    <a href="/undergrad/{{ course }}/{{ sem }}" class="list-group-item list-group-item-action">Semester {{ sem }}</a>
+    <div class="col-md-4">
+        <div class="card text-center mb-4">
+            <div class="card-body">
+                <a href="/undergrad/{{ course }}/{{ sem }}" class="text-decoration-none text-dark">
+                    <i class="fas fa-book fa-3x mb-3 text-primary"></i>
+                    <h4 class="card-title">Semester {{ sem }}</h4>
+                </a>
+            </div>
+        </div>
+    </div>
     {% endfor %}
 </div>
 {% endblock %}
