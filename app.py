@@ -221,27 +221,23 @@ def remove_file(filename):
 
     return render_template('remove.html', filename=filename)
 
-@click.command('create-admin')
+@click.command('init-db')
 @with_appcontext
-def create_admin_command():
-    """Create a new admin user."""
+def init_db_command():
+    """Clear existing data and create new tables and an admin user."""
+    db.drop_all()
+    db.create_all()
     if not User.query.filter_by(username='admin').first():
         admin = User(username='admin', password=generate_password_hash('admin'), is_admin=True)
         db.session.add(admin)
         db.session.commit()
-        click.echo('Admin user created.')
+        click.echo('Initialized the database and created an admin user.')
     else:
+        # This part of the logic might not be reached if db.drop_all() is used,
+        # but it's good practice to keep it for robustness.
         click.echo('Admin user already exists.')
 
-app.cli.add_command(create_admin_command)
-
-@click.command('test-command')
-@with_appcontext
-def test_command():
-    """A simple test command."""
-    click.echo('Test command executed successfully!')
-
-app.cli.add_command(test_command)
+app.cli.add_command(init_db_command)
 
 if __name__ == '__main__':
     with app.app_context():
