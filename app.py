@@ -183,8 +183,20 @@ def upload_file():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             filetype = filename.rsplit('.', 1)[1].lower()
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             
+            # Logging for PythonAnywhere
+            print(f"--- UPLOAD DEBUG ---")
+            print(f"app.config['UPLOAD_FOLDER']: {app.config['UPLOAD_FOLDER']}")
+            print(f"filename: {filename}")
+            save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            print(f"Saving to: {save_path}")
+            
+            try:
+                file.save(save_path)
+                print(f"Successfully saved {filename}")
+            except Exception as e:
+                print(f"Error saving file: {e}")
+
             new_resource = Resource(title=title, filename=filename, filetype=filetype, level1=level1, level2=level2, level3=level3, subject=subject)
             db.session.add(new_resource)
             db.session.commit()
