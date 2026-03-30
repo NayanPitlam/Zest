@@ -10,7 +10,8 @@ from flask.cli import with_appcontext
 app = Flask(__name__)
 app.secret_key = 'super_secret_key' # Make sure to change this in a production environment
 
-UPLOAD_FOLDER = 'uploads'
+basedir = os.path.abspath(os.path.dirname(__file__))
+UPLOAD_FOLDER = os.path.join(basedir, 'uploads')
 ALLOWED_EXTENSIONS = {'pdf', 'csv', 'json', 'ppt', 'pptx','doc', 'docx', 'xls', 'xlsx', 'txt', 'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
